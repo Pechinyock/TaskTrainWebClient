@@ -1,16 +1,19 @@
-﻿namespace TT.WebClient.Application;
+﻿using Microsoft.Extensions.FileProviders;
+
+namespace TT.WebClient.Application;
 
 /* [TODO]
- * After pass TT.Core into shared libs this class has to impement IApplication from it!
+ * - After pass TT.Core into shared libs this class has to implement IApplication from it!
+ * - Hide everything in extension methods this file should looks like:
+ *   services.Use[Something](<params>)
+ * - UseUrls gets urls form config file. Might be deference depends on $Configuration
  */
 public class TaskTrainWebClientApp
 {
     #region Startup initializer
-    private class Initialize 
+    private class Initialize
     {
         public IConfiguration Configuration { get; }
-
-        private readonly string _pgConnection;
 
         public Initialize(IHostEnvironment env)
         {
@@ -35,13 +38,18 @@ public class TaskTrainWebClientApp
             }
 
             builder.UseHttpsRedirection();
+            var pathToRoot = Path.Combine(env.ContentRootPath, "wwwroot");
             builder.UseStaticFiles();
+            builder.UseStaticFiles(new StaticFileOptions()
+            {
+                FileProvider = new PhysicalFileProvider(pathToRoot)
+            });
 
             builder.UseRouting();
 
             builder.UseAuthorization();
 
-            builder.UseEndpoints(endpoints => 
+            builder.UseEndpoints(endpoints =>
             {
                 endpoints.MapRazorPages();
             });
@@ -50,21 +58,21 @@ public class TaskTrainWebClientApp
     #endregion
     private IHost _app;
 
-    public void Build(string[] args) 
+    public void Build(string[] args)
     {
-        var builder = Host.CreateDefaultBuilder(args)
-            .ConfigureWebHostDefaults(webBuilder => 
-            {
-                webBuilder.UseStartup<Initialize>()
-                    .UseKestrel(options => { })
-                    .UseUrls("http://*:5001");
-            });
+        var builder = Host.CreateDefaultBuilder(args);
+
+        builder.ConfigureWebHostDefaults(webBuilder =>
+        {
+            webBuilder.UseStartup<Initialize>()
+                .UseKestrel(options => { })
+                .UseUrls("http://*:5001");
+
+            webBuilder.UseWebRoot(AppContext.BaseDirectory);
+        });
 
         _app = builder.Build();
     }
 
-    public void Run() 
-    {
-        _app.Run();
-    }
+    public void Run() => _app.Run();
 }
