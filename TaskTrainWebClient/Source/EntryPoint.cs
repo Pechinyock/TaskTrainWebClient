@@ -10,4 +10,3 @@ internal static class EntryPoint
     }
 
 }
-
