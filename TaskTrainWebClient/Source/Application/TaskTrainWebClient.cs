@@ -66,7 +66,7 @@ public class TaskTrainWebClientApp
         {
             webBuilder.UseStartup<Initialize>()
                 .UseKestrel(options => { })
-                .UseUrls("http://*:5001");
+                .UseUrls("http://*:5002");
 
             webBuilder.UseWebRoot(AppContext.BaseDirectory);
         });
